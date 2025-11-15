@@ -1,0 +1,14 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+RUN npm ci --omit=dev
+
+EXPOSE 3003
+CMD ["node", "dist/assignment/server.js"]

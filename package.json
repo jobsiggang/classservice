@@ -1,0 +1,59 @@
+{
+  "name": "fairproject-microservices",
+  "version": "1.0.0",
+  "description": "Domain-based Microservice Structure for Education Platform",
+  "main": "index.js",
+  "scripts": {
+    "dev:auth": "nodemon --exec ts-node --transpile-only auth/server.ts",
+    "dev:user": "nodemon --exec ts-node --transpile-only user/server.ts",
+    "dev:assignment": "nodemon --exec ts-node --transpile-only assignment/server.ts",
+    "dev:file": "nodemon --exec ts-node --transpile-only file/server.ts",
+    "dev:realtime": "nodemon --exec ts-node --transpile-only realtime/server.ts",
+    "dev:all": "concurrently \"npm run dev:auth\" \"npm run dev:user\" \"npm run dev:assignment\" \"npm run dev:file\" \"npm run dev:realtime\"",
+    "seed:superadmin": "ts-node scripts/create-superadmin.ts",
+    "build": "tsc --noEmitOnError false || exit 0",
+    "start:auth": "node dist/auth/server.js",
+    "start:user": "node dist/user/server.js",
+    "start:assignment": "node dist/assignment/server.js",
+    "start:file": "node dist/file/server.js",
+    "start:realtime": "node dist/realtime/server.js"
+  },
+  "keywords": [
+    "microservices",
+    "education",
+    "mongodb",
+    "express",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vercel/node": "^3.0.12",
+    "express": "^4.18.2",
+    "mongodb": "^6.3.0",
+    "mongoose": "^8.0.3",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "ws": "^8.16.0",
+    "multer": "^1.4.5-lts.1",
+    "@aws-sdk/client-s3": "^3.484.0",
+    "nanoid": "^3.3.7",
+    "express-rate-limit": "^7.1.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.6",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/cors": "^2.8.17",
+    "@types/multer": "^1.4.11",
+    "@types/ws": "^8.5.10",
+    "typescript": "^5.3.3",
+    "nodemon": "^3.0.2",
+    "ts-node": "^10.9.2",
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FairProject API Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        h1 { color: #333; }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .error { background: #ffe6e6; color: #d32f2f; }
+        .success { background: #e6ffe6; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>🎯 FairProject API Tester</h1>
+    
+    <div class="test-section">
+        <h2>1. Health Check</h2>
+        <button onclick="testHealth()">Test Health Check</button>
+        <div id="health-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 학교 생성</h2>
+        <button onclick="createSchool()">Create School</button>
+        <div id="school-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 로그인</h2>
+        <input type="email" id="login-email" placeholder="Email" value="admin@school.com">
+        <input type="password" id="login-password" placeholder="Password" value="Admin123!">
+        <button onclick="login()">Login</button>
+        <div id="login-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. 내 정보 조회</h2>
+        <input type="text" id="token" placeholder="Access Token" style="width: 100%; margin-bottom: 10px;">
+        <button onclick="getMe()">Get My Info</button>
+        <div id="me-result" class="result"></div>
+    </div>
+
+    <script>
+        const AUTH_URL = 'http://localhost:3001/api/auth';
+        const USER_URL = 'http://localhost:3002/api/user';
+
+        async function testHealth() {
+            const resultDiv = document.getElementById('health-result');
+            try {
+                const response = await fetch('http://localhost:3001/health');
+                const data = await response.json();
+                resultDiv.className = 'result success';
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function createSchool() {
+            const resultDiv = document.getElementById('school-result');
+            try {
+                const response = await fetch(`${USER_URL}/schools`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        schoolName: '서울고등학교',
+                        adminName: '관리자',
+                        adminEmail: 'admin@school.com',
+                        adminPassword: 'Admin123!'
+                    })
+                });
+                const data = await response.json();
+                resultDiv.className = response.ok ? 'result success' : 'result error';
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: ' + error.message + '\n\n⚠️ User Service (port 3002)가 실행 중인지 확인하세요.';
+            }
+        }
+
+        async function login() {
+            const resultDiv = document.getElementById('login-result');
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                const response = await fetch(`${AUTH_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                
+                if (response.ok && data.data?.accessToken) {
+                    document.getElementById('token').value = data.data.accessToken;
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ 로그인 성공!\n\n' + JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function getMe() {
+            const resultDiv = document.getElementById('me-result');
+            const token = document.getElementById('token').value;
+
+            if (!token) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '⚠️ 먼저 로그인하여 토큰을 받으세요.';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${AUTH_URL}/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                resultDiv.className = response.ok ? 'result success' : 'result error';
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
