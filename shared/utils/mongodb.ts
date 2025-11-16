@@ -10,8 +10,13 @@ export async function connectDB(): Promise<Db> {
 
   const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/fairproject';
   
+  // 디버깅: URI 형식 확인 (비밀번호는 숨김)
+  const maskedUri = uri.replace(/:[^:@]+@/, ':****@');
+  console.log(`🔗 Connecting to MongoDB: ${maskedUri}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  
   if (!client) {
-    // Railway 및 프로덕션 환경을 위한 MongoDB 연결 옵션
+    // MongoDB Atlas 전용 연결 옵션
     const options: any = {
       serverSelectionTimeoutMS: 30000,
       connectTimeoutMS: 30000,
@@ -22,23 +27,24 @@ export async function connectDB(): Promise<Db> {
       retryReads: true,
     };
 
-    // MongoDB Atlas (mongodb+srv://) 사용 시 TLS 자동 활성화
-    if (uri.startsWith('mongodb+srv://')) {
-      // TLS는 자동으로 활성화되므로 명시적 설정 불필요
-      // Railway 환경에서는 기본 TLS 설정 사용
-    } else if (uri.startsWith('mongodb://') && process.env.NODE_ENV === 'production') {
-      // 프로덕션 환경에서 일반 mongodb:// URI 사용 시만 TLS 활성화
-      options.tls = true;
-    }
+    // mongodb+srv는 TLS를 자동으로 활성화하므로 추가 설정 불필요
+    console.log(`⚙️  Connection options:`, JSON.stringify(options, null, 2));
 
-    client = new MongoClient(uri, options);
-    await client.connect();
+    try {
+      client = new MongoClient(uri, options);
+      console.log(`🔌 Attempting to connect...`);
+      await client.connect();
+      console.log(`✅ MongoDB client connected successfully`);
+    } catch (error) {
+      console.error(`❌ MongoDB connection failed:`, error);
+      throw error;
+    }
   }
 
   const dbName = process.env.DB_NAME || 'fairproject';
   cachedDb = client.db(dbName);
 
-  console.log(`✅ Connected to MongoDB: ${dbName}`);
+  console.log(`✅ Connected to MongoDB database: ${dbName}`);
   
   return cachedDb;
 }
