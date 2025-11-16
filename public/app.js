@@ -54,11 +54,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // Admin 포털 체크
 function checkIfAdminPortal() {
     const host = window.location.host;
-    isAdminPortal = host.startsWith('admin.');
+    const pathname = window.location.pathname;
+    
+    // Railway 프로덕션 환경에서는 /admin 경로 사용, 로컬에서는 서브도메인 사용
+    isAdminPortal = host.startsWith('admin.') || pathname.startsWith('/admin');
     console.log('Is Admin Portal:', isAdminPortal);
     
     // Admin 포털에서는 admin.html로 리디렉션 (로그인 페이지 제외)
-    if (isAdminPortal && !window.location.pathname.includes('admin.html') && !window.location.pathname.includes('test.html')) {
+    if (isAdminPortal && !pathname.includes('admin.html') && !pathname.includes('test.html')) {
         const token = localStorage.getItem('token');
         const user = localStorage.getItem('user');
         
@@ -70,9 +73,9 @@ function checkIfAdminPortal() {
                 return;
             }
         }
-        // 로그인 안되어 있으면 test.html로 리디렉션
-        else {
-            window.location.href = '/test.html';
+        // 로그인 안되어 있으면 로그인 페이지 유지 (Railway에서는 / 경로)
+        else if (pathname === '/admin') {
+            // /admin 경로로 접근했지만 로그인 안됨 -> 로그인 페이지 유지
             return;
         }
     }
@@ -128,6 +131,14 @@ function setupEventListeners() {
     
     // 공지사항 폼
     document.getElementById('announcement-form').addEventListener('submit', handlePostAnnouncement);
+    
+    // Admin 포털 표시
+    if (isAdminPortal) {
+        const portalInfo = document.getElementById('portal-info');
+        if (portalInfo) {
+            portalInfo.style.display = 'block';
+        }
+    }
 }
 
 // 로그인 처리
