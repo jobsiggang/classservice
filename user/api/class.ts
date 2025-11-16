@@ -134,14 +134,19 @@ router.get('/', verifyToken, requireSchool, asyncHandler(async (req: AuthRequest
   // 학생은 자기가 속한 클래스들 조회 (여러 개)
   else if (req.user!.role === 'student') {
     const user = await db.collection('users').findOne({ _id: new ObjectId(req.user!.userId) });
+    console.log('학생 사용자 데이터:', JSON.stringify(user, null, 2)); // 디버깅 로그
+    
     const classIds = user?.classIds || [];
+    console.log('학생의 classIds:', classIds); // 디버깅 로그
     
     if (classIds.length === 0) {
       // 클래스에 속하지 않은 학생은 빈 배열 반환
+      console.log('학생이 속한 클래스가 없음'); // 디버깅 로그
       return sendSuccess(res, []);
     }
     
     query._id = { $in: classIds.map((id: string) => new ObjectId(id)) };
+    console.log('클래스 조회 쿼리:', JSON.stringify(query, null, 2)); // 디버깅 로그
   }
 
   const classes = await db.collection('classes')

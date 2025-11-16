@@ -223,19 +223,31 @@ function setupRoleBasedUI() {
     if (role === 'student') {
         // 학생용 UI
         tabNavigation.innerHTML = `
-            <button class="tab-item active" onclick="showSection('my-classes')">
+            <button class="tab-item active" onclick="showSection('classes')">
                 📚 내 클래스
             </button>
-            <button class="tab-item" onclick="showSection('my-assignments')">
+            <button class="tab-item" onclick="showSection('assignments')">
                 📝 내 과제
             </button>
         `;
         
         // 학생용 섹션만 표시
-        document.getElementById('classes-section').style.display = 'none';
+        document.getElementById('classes-section').style.display = 'block';
         document.getElementById('students-section').style.display = 'none';
         document.getElementById('teachers-section').style.display = 'none';
-        document.getElementById('assignments-section').style.display = 'none';
+        document.getElementById('assignments-section').style.display = 'block';
+        
+        // 클래스 생성 버튼 숨기기 (학생은 클래스 생성 불가)
+        const createClassBtn = document.querySelector('#classes-section .btn-primary');
+        if (createClassBtn && createClassBtn.textContent.includes('클래스 생성')) {
+            createClassBtn.style.display = 'none';
+        }
+        
+        // 섹션 제목 변경
+        const classesTitle = document.querySelector('#classes-section h2');
+        if (classesTitle) {
+            classesTitle.textContent = '내 클래스';
+        }
         
     } else if (role === 'teacher') {
         // 교사용 UI
@@ -359,8 +371,12 @@ async function loadClasses() {
         
         const data = await response.json();
         
+        console.log('클래스 API 응답:', data); // 디버깅 로그
+        console.log('현재 사용자:', currentUser); // 디버깅 로그
+        
         if (response.ok && data.data) {
             classes = data.data;
+            console.log('로드된 클래스 수:', classes.length); // 디버깅 로그
             renderClasses();
         }
     } catch (error) {
