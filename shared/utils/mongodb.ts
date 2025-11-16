@@ -11,7 +11,14 @@ export async function connectDB(): Promise<Db> {
   const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/fairproject';
   
   if (!client) {
-    client = new MongoClient(uri);
+    client = new MongoClient(uri, {
+      tls: true,
+      tlsAllowInvalidCertificates: false,
+      tlsAllowInvalidHostnames: false,
+      serverSelectionTimeoutMS: 30000,
+      connectTimeoutMS: 30000,
+      socketTimeoutMS: 30000,
+    });
     await client.connect();
   }
 
