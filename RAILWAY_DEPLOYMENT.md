@@ -12,8 +12,8 @@ Railway에서 MongoDB Atlas 연결 시 SSL/TLS 오류가 발생할 수 있습니
 ### 공통 환경 변수 (모든 서비스)
 
 ```bash
-# MongoDB
-MONGODB_URI=mongodb+srv://bugsdb:wkaaksqh1984@cluster0.1vzlqku.mongodb.net/student_management?retryWrites=true&w=majority&tls=true
+# MongoDB - URI에 &tls=true 파라미터 제거 (mongodb+srv는 자동으로 TLS 사용)
+MONGODB_URI=mongodb+srv://bugsdb:wkaaksqh1984@cluster0.1vzlqku.mongodb.net/student_management?retryWrites=true&w=majority
 DB_NAME=fairproject
 
 # JWT
@@ -123,12 +123,37 @@ curl https://your-auth-service.railway.app/api/health
 curl https://your-user-service.railway.app/api/health
 ```
 
-## MongoDB Atlas 네트워크 접근 설정
+## ⚠️ MongoDB Atlas 네트워크 접근 설정 (필수!)
 
-1. MongoDB Atlas 대시보드 → Network Access
-2. **Add IP Address** 클릭
-3. **Allow Access from Anywhere** 선택 (0.0.0.0/0)
-   - 또는 Railway IP 범위만 허용하려면 Railway 문서 참고
+Railway에서 연결하려면 **반드시** MongoDB Atlas에서 IP 화이트리스트를 설정해야 합니다.
+
+### 방법 1: 모든 IP 허용 (권장 - 간단함)
+
+1. [MongoDB Atlas](https://cloud.mongodb.com) 로그인
+2. 좌측 메뉴 **Network Access** 클릭
+3. **Add IP Address** 버튼 클릭
+4. **Allow Access from Anywhere** 선택
+5. **Confirm** 클릭
+
+**주의:** MongoDB 자체 인증(username/password)이 있어 안전하지만, 더 보안을 원하면 방법 2 사용
+
+### 방법 2: Railway IP만 허용 (보안 강화)
+
+Railway는 동적 IP를 사용하므로 Railway의 공식 IP 범위를 추가해야 합니다:
+
+```
+35.190.247.0/24
+35.236.0.0/20
+35.243.0.0/20
+```
+
+각 IP 범위를 별도로 추가하세요.
+
+### 확인 방법
+
+Network Access 페이지에서 다음 중 하나가 표시되어야 합니다:
+- `0.0.0.0/0` (Allow from anywhere)
+- Railway IP 범위들
 
 ## 트러블슈팅
 
