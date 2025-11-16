@@ -1,7 +1,18 @@
-// API 설정
-const API_BASE = 'http://localhost:3001/api/auth';
-const USER_API = 'http://localhost:3002/api/user';
-const ASSIGNMENT_API = 'http://localhost:3003/api/assignment';
+// API 설정 - Railway 배포 환경을 위한 동적 URL
+const isProduction = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
+
+// Railway 환경에서는 환경 변수로 설정된 URL 사용, 로컬에서는 localhost 사용
+const API_BASE = isProduction 
+    ? (window.RAILWAY_AUTH_URL || 'https://fairschool-auth.up.railway.app/api/auth')
+    : 'http://localhost:3001/api/auth';
+
+const USER_API = isProduction 
+    ? (window.RAILWAY_USER_URL || 'https://fairschool-user.up.railway.app/api/user')
+    : 'http://localhost:3002/api/user';
+
+const ASSIGNMENT_API = isProduction 
+    ? (window.RAILWAY_ASSIGNMENT_URL || 'https://fairschool-assignment.up.railway.app/api/assignment')
+    : 'http://localhost:3003/api/assignment';
 
 // 상태 관리
 let currentUser = null;
