@@ -161,10 +161,10 @@ async function handleLogin(e) {
             localStorage.setItem('token', currentToken);
             localStorage.setItem('user', JSON.stringify(currentUser));
             
-            // 학교별 도메인으로 리다이렉트 (슈퍼어드민 제외)
-            if (currentUser.role !== 'superadmin' && currentUser.schoolId) {
+            // 학교별 도메인으로 리다이렉트 (로컬 개발 환경에서만)
+            // Railway 등 프로덕션 환경에서는 서브도메인 라우팅 사용 안 함
+            if (!isProduction && currentUser.role !== 'superadmin' && currentUser.schoolId) {
                 const currentHost = window.location.hostname;
-                const schoolSubdomain = `${currentUser.schoolId}.${currentHost.replace(/^[^.]+\./, '')}`;
                 
                 // 이미 올바른 도메인에 있는지 확인
                 if (!currentHost.startsWith(currentUser.schoolId)) {
