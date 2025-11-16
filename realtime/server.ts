@@ -19,7 +19,7 @@ const PORT = process.env.REALTIME_PORT || 3005;
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: process.env.CORS_ORIGIN === '*' ? true : (process.env.CORS_ORIGIN || 'http://localhost:3000'),
   credentials: true
 }));
 app.use(express.json());

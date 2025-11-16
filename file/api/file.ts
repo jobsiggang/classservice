@@ -12,7 +12,7 @@ router.get('/:fileId', verifyToken, asyncHandler(async (req: AuthRequest, res: R
   const { fileId } = req.params;
 
   const db = await getDB();
-  const file = await db.collection('files').findOne({ _id: fileId });
+  const file = await db.collection('files').findOne({ _id: fileId } as any);
 
   if (!file) {
     return sendError(res, '파일을 찾을 수 없습니다', 404);
@@ -44,7 +44,7 @@ router.delete('/:fileId', verifyToken, asyncHandler(async (req: AuthRequest, res
   const { fileId } = req.params;
 
   const db = await getDB();
-  const file = await db.collection('files').findOne({ _id: fileId });
+  const file = await db.collection('files').findOne({ _id: fileId } as any);
 
   if (!file) {
     return sendError(res, '파일을 찾을 수 없습니다', 404);
@@ -55,7 +55,7 @@ router.delete('/:fileId', verifyToken, asyncHandler(async (req: AuthRequest, res
     return sendError(res, '권한이 없습니다', 403);
   }
 
-  await db.collection('files').deleteOne({ _id: fileId });
+  await db.collection('files').deleteOne({ _id: fileId } as any);
 
   // TODO: Delete from S3 as well
 

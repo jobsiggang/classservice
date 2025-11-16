@@ -8,15 +8,18 @@ export interface User {
   role: 'superadmin' | 'admin' | 'teacher' | 'student';
   schoolId: string | null; // null for superadmin
   classId?: string;
+  studentNumber?: string; // 학생번호
+  isSuperAdmin?: boolean; // 최고 관리자 여부
   createdAt: Date;
   updatedAt: Date;
   lastLogin?: Date;
-  permissions?: string[]; // For superadmin
+  permissions?: string[]; // For admin/teacher
 }
 
 export interface School {
   _id: string; // Custom ID: school_xxx123
   name: string;
+  adminIds: string[]; // 학교 관리자 ID 목록
   createdAt: Date;
   updatedAt: Date;
   settings: {
@@ -28,7 +31,9 @@ export interface School {
 export interface Class {
   _id?: string;
   name: string;
-  grade?: string;
+  grade?: number;
+  section?: number;
+  classCode: string; // 6자리 고유 코드 (예: ABC123)
   schoolId: string;
   teacherIds: string[];
   studentIds: string[];

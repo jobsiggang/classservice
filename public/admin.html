@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>슈퍼관리자 - 학교 관리</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .admin-header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .admin-header p {
+            margin: 8px 0 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-card .icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin: 8px 0;
+        }
+        .stat-card .label {
+            font-size: 13px;
+            color: #666;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .section-header h2 {
+            font-size: 20px;
+            margin: 0;
+        }
+        .schools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 15px;
+        }
+        .school-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            padding: 16px;
+            transition: transform 0.2s;
+        }
+        .school-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .school-card h3 {
+            margin: 0 0 8px 0;
+            color: #333;
+            font-size: 18px;
+        }
+        .school-info {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+        .school-info div {
+            margin: 4px 0;
+        }
+        .school-url {
+            background: #f8f9fa;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 8px 0;
+            word-break: break-all;
+        }
+        .school-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .school-actions button {
+            flex: 1;
+            padding: 6px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .btn-view {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-delete {
+            background: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <h1>🔐 슈퍼관리자 포털</h1>
+        <p>FairSchool 시스템 관리</p>
+        <div style="margin-top: 12px;">
+            <button onclick="logout()" class="btn btn-secondary" style="padding: 6px 16px; font-size: 13px;">로그아웃</button>
+        </div>
+    </div>
+
+    <!-- 탭 네비게이션 -->
+    <div class="tab-navigation" style="background: white; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.08); display: flex; border-bottom: 2px solid #e9ecef;">
+        <button class="tab-item active" onclick="showAdminSection('schools')" style="padding: 14px 24px; background: none; border: none; border-bottom: 3px solid #667eea; cursor: pointer; font-size: 14px; font-weight: 500; color: #667eea;">
+            🏫 학교 관리
+        </button>
+        <button class="tab-item" onclick="showAdminSection('statistics')" style="padding: 14px 24px; background: none; border: none; border-bottom: 3px solid transparent; cursor: pointer; font-size: 14px; font-weight: 500; color: #666;">
+            📊 통계
+        </button>
+    </div>
+
+    <div class="container">
+        <!-- 학교 관리 섹션 -->
+        <div id="schools-section" class="admin-section active">
+            <div class="section-header">
+                <h2>학교 목록</h2>
+                <button onclick="openCreateSchoolModal()" class="btn btn-primary">+ 학교 생성</button>
+            </div>
+
+            <div id="schools-list" class="schools-grid">
+                <!-- 학교 카드가 동적으로 추가됩니다 -->
+            </div>
+        </div>
+
+        <!-- 통계 섹션 -->
+        <div id="statistics-section" class="admin-section" style="display: none;">
+            <div class="section-header">
+                <h2>시스템 통계</h2>
+                <select id="stats-school-filter" onchange="loadStatistics()" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd;">
+                    <option value="">전체 학교</option>
+                </select>
+            </div>
+
+            <!-- 상단 통계 카드 -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon">🏫</div>
+                    <div class="value" id="stat-schools">-</div>
+                    <div class="label">학교 수</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">�‍🏫</div>
+                    <div class="value" id="stat-teachers">-</div>
+                    <div class="label">교사 수</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">�</div>
+                    <div class="value" id="stat-students">-</div>
+                    <div class="label">학생 수</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">📚</div>
+                    <div class="value" id="stat-classes">-</div>
+                    <div class="label">클래스 수</div>
+                </div>
+            </div>
+
+            <!-- 학교별 상세 통계 -->
+            <div id="school-stats-detail" style="margin-top: 30px;">
+                <!-- 학교별 상세 통계가 여기에 표시됩니다 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 학교 생성 모달 -->
+    <div id="create-school-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>학교 생성</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="create-school-form" onsubmit="handleCreateSchool(event)">
+                <div class="form-group">
+                    <label>학교명 *</label>
+                    <input type="text" id="school-name" placeholder="예: 운양고등학교" required>
+                </div>
+                <div class="form-group">
+                    <label>서브도메인 (선택사항)</label>
+                    <input type="text" id="school-subdomain" placeholder="예: unyang-high">
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        영문 소문자, 숫자, 하이픈만 사용 가능 (비워두면 자동 생성)
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label>관리자 이름 *</label>
+                    <input type="text" id="admin-name" placeholder="예: 김관리" required>
+                </div>
+                <div class="form-group" style="background: #f0f4ff; padding: 12px; border-radius: 6px; border: 1px solid #667eea;">
+                    <strong style="color: #667eea; font-size: 13px;">✅ 자동 생성 정보</strong>
+                    <p style="margin: 8px 0 4px 0; font-size: 13px;">
+                        📧 관리자 이메일: <code>서브도메인@fairschool.kr</code>
+                    </p>
+                    <p style="margin: 4px 0; font-size: 13px;">
+                        🔑 초기 비밀번호: <code>서브도메인@fairschool.kr</code>
+                    </p>
+                    <small style="color: #666; font-size: 12px;">
+                        ⚠️ 관리자는 첫 로그인 시 비밀번호를 변경해야 합니다.
+                    </small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal()" class="btn btn-secondary">취소</button>
+                    <button type="submit" class="btn btn-primary">생성</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-overlay" class="modal-overlay" onclick="closeModal()"></div>
+    <div id="loading" class="loading"><div class="spinner"></div></div>
+
+    <script>
+        const AUTH_URL = 'http://localhost:3001/api/auth';
+        const USER_URL = 'http://localhost:3002/api/user';
+        let currentToken = localStorage.getItem('token');
+        let currentUser = null;
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+        });
+
+        async function checkAuth() {
+            if (!currentToken) {
+                alert('로그인이 필요합니다.');
+                window.location.href = '/test.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${AUTH_URL}/me`, {
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('인증 실패');
+                }
+
+                const data = await response.json();
+                currentUser = data.data;
+
+                if (currentUser.role !== 'superadmin') {
+                    alert('슈퍼관리자만 접근 가능합니다.');
+                    window.location.href = '/';
+                    return;
+                }
+
+                loadStats();
+                loadSchools();
+            } catch (error) {
+                alert('인증 오류: ' + error.message);
+                localStorage.removeItem('token');
+                window.location.href = '/test.html';
+            }
+        }
+
+        // 탭 전환
+        function showAdminSection(section) {
+            document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.tab-item').forEach(t => {
+                t.style.borderBottomColor = 'transparent';
+                t.style.color = '#666';
+            });
+            
+            document.getElementById(`${section}-section`).style.display = 'block';
+            event.target.style.borderBottomColor = '#667eea';
+            event.target.style.color = '#667eea';
+            
+            if (section === 'schools') {
+                loadSchools();
+            } else if (section === 'statistics') {
+                loadStatistics();
+            }
+        }
+
+        // 통계 로드
+        async function loadStatistics() {
+            showLoading(true);
+            const schoolFilter = document.getElementById('stats-school-filter').value;
+            
+            try {
+                const url = schoolFilter 
+                    ? `${USER_URL}/superadmin/stats?schoolId=${schoolFilter}`
+                    : `${USER_URL}/superadmin/stats`;
+                    
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const stats = data.data;
+                    
+                    // 상단 통계 카드 업데이트
+                    document.getElementById('stat-schools').textContent = stats.totalSchools || '-';
+                    document.getElementById('stat-teachers').textContent = stats.totalTeachers || 0;
+                    document.getElementById('stat-students').textContent = stats.totalStudents || 0;
+                    document.getElementById('stat-classes').textContent = stats.totalClasses || 0;
+                    
+                    // 학교별 상세 통계 표시
+                    if (stats.schoolStats && stats.schoolStats.length > 0) {
+                        renderSchoolStats(stats.schoolStats);
+                    } else if (schoolFilter) {
+                        document.getElementById('school-stats-detail').innerHTML = 
+                            '<p style="text-align: center; color: #999; padding: 40px;">선택한 학교의 통계 정보입니다.</p>';
+                    } else {
+                        document.getElementById('school-stats-detail').innerHTML = '';
+                    }
+                }
+            } catch (error) {
+                console.error('통계 로드 실패:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 학교별 통계 렌더링
+        function renderSchoolStats(schoolStats) {
+            const container = document.getElementById('school-stats-detail');
+            
+            container.innerHTML = `
+                <h3 style="margin-bottom: 15px; color: #333;">학교별 상세 통계</h3>
+                <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead style="background: #f8f9fa;">
+                            <tr>
+                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">학교명</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">서브도메인</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">교사</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">학생</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">클래스</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${schoolStats.map((school, index) => `
+                                <tr style="border-bottom: 1px solid #eee; ${index % 2 === 0 ? 'background: #fafafa;' : ''}">
+                                    <td style="padding: 12px;">${school.name}</td>
+                                    <td style="padding: 12px; text-align: center; font-family: monospace; color: #667eea;">${school.subdomain || school.schoolId || '-'}</td>
+                                    <td style="padding: 12px; text-align: center;">${school.teacherCount || 0}명</td>
+                                    <td style="padding: 12px; text-align: center;">${school.studentCount || 0}명</td>
+                                    <td style="padding: 12px; text-align: center;">${school.classCount || 0}개</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${USER_URL}/superadmin/stats`, {
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const stats = data.data;
+                    // 학교 필터 드롭다운 업데이트 (통계 탭용)
+                    const filterSelect = document.getElementById('stats-school-filter');
+                    if (stats.schoolStats && filterSelect) {
+                        filterSelect.innerHTML = '<option value="">전체 학교</option>' +
+                            stats.schoolStats.map(school => 
+                                `<option value="${school.schoolId}">${school.name}</option>`
+                            ).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('통계 로딩 실패:', error);
+            }
+        }
+
+        async function loadSchools() {
+            showLoading(true);
+            try {
+                const response = await fetch(`${USER_URL}/superadmin/schools`, {
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const schools = data.data;
+                    const schoolsList = document.getElementById('schools-list');
+
+                    if (schools.length === 0) {
+                        schoolsList.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999;">등록된 학교가 없습니다.</p>';
+                    } else {
+                        schoolsList.innerHTML = schools.map(school => `
+                            <div class="school-card">
+                                <h3>🏫 ${school.name}</h3>
+                                <div class="school-info">
+                                    <div><strong>서브도메인:</strong> ${school.subdomain}</div>
+                                    <div><strong>관리자:</strong> ${school.adminIds.length}명</div>
+                                    <div><strong>생성일:</strong> ${new Date(school.createdAt).toLocaleDateString()}</div>
+                                </div>
+                                <div class="school-url">
+                                    ${school.domain}
+                                </div>
+                                <div class="school-actions">
+                                    <button class="btn-view" onclick="viewSchool('${school._id}')">접속하기</button>
+                                    <button class="btn-delete" onclick="deleteSchool('${school._id}', '${school.name}')">삭제</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                alert('학교 목록 로딩 실패: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function openCreateSchoolModal() {
+            document.getElementById('create-school-modal').classList.add('active');
+            document.getElementById('modal-overlay').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('create-school-modal').classList.remove('active');
+            document.getElementById('modal-overlay').classList.remove('active');
+        }
+
+        async function handleCreateSchool(e) {
+            e.preventDefault();
+            showLoading(true);
+
+            const schoolName = document.getElementById('school-name').value;
+            const subdomain = document.getElementById('school-subdomain').value;
+            const adminName = document.getElementById('admin-name').value;
+
+            try {
+                const response = await fetch(`${USER_URL}/schools`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({
+                        schoolName,
+                        subdomain: subdomain || undefined,
+                        adminName
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const result = data.data;
+                    alert(`✅ 학교가 생성되었습니다!\n\n` +
+                          `학교명: ${result.schoolName}\n` +
+                          `접속 주소: ${result.localUrl}\n\n` +
+                          `관리자 이메일: ${result.admin.email}\n` +
+                          `초기 비밀번호: ${result.admin.initialPassword}\n\n` +
+                          `관리자에게 로그인 정보를 전달해주세요.`);
+                    closeModal();
+                    document.getElementById('create-school-form').reset();
+                    loadSchools();
+                    loadStats();
+                } else {
+                    alert('학교 생성 실패: ' + (data.error || '알 수 없는 오류'));
+                }
+            } catch (error) {
+                alert('서버 연결 오류: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function viewSchool(schoolId) {
+            window.open(`http://${schoolId}.localhost:3001`, '_blank');
+        }
+
+        async function deleteSchool(schoolId, schoolName) {
+            if (!confirm(`⚠️ "${schoolName}" 학교와 모든 관련 데이터를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
+                return;
+            }
+
+            if (!confirm('한 번 더 확인합니다. 정말 삭제하시겠습니까?')) {
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const response = await fetch(`${USER_URL}/superadmin/schools/${schoolId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('학교가 삭제되었습니다.');
+                    loadSchools();
+                    loadStats();
+                } else {
+                    alert('학교 삭제 실패: ' + (data.error || '알 수 없는 오류'));
+                }
+            } catch (error) {
+                alert('서버 연결 오류: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/test.html';
+        }
+
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            if (show) {
+                loading.classList.add('active');
+            } else {
+                loading.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>

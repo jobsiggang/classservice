@@ -6,6 +6,9 @@ export interface IUser extends Document {
   password: string;
   role: "superadmin" | "admin" | "teacher" | "student";
   schoolId?: string;
+  classIds?: string[]; // 학생이 수강 중인 클래스들 (여러 개)
+  grade?: number; // 학년 (학생용)
+  classNumber?: string; // 학번 (학생용)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -15,7 +18,10 @@ const UserSchema = new Schema<IUser>({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['superadmin', 'admin', 'teacher', 'student'], default: 'student' },
-  schoolId: { type: String, required: false }
+  schoolId: { type: String, required: false },
+  classIds: { type: [String], required: false, default: [] }, // 학생용
+  grade: { type: Number, required: false }, // 학생용
+  classNumber: { type: String, required: false } // 학생용
 }, {
   timestamps: true
 });
@@ -31,4 +37,7 @@ export interface User {
   password: string;
   role: "superadmin" | "admin" | "teacher" | "student";
   schoolId?: string;
+  classIds?: string[]; // 학생이 수강 중인 클래스들
+  grade?: number; // 학년 (학생용)
+  classNumber?: string; // 학번 (학생용)
 }

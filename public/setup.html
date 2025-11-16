@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FairSchool - 시스템 초기 설정</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .setup-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .setup-steps {
+            margin-bottom: 30px;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .step-text {
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+        
+        .message.error {
+            background: #ffe6e6;
+            color: #d32f2f;
+            display: block;
+        }
+        
+        .message.success {
+            background: #e6ffe6;
+            color: #2e7d32;
+            display: block;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status-check {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .status-check.ready {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .status-check.error {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <div class="header">
+            <h1>🎓 FairSchool</h1>
+            <p>시스템 초기 설정</p>
+        </div>
+        
+        <div id="status-check" class="status-check">
+            <p>시스템 상태 확인 중...</p>
+        </div>
+        
+        <div id="setup-content" style="display: none;">
+            <div class="setup-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-text">슈퍼어드민 계정을 생성합니다</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-text">admin.localhost:3001 에서 로그인</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-text">학교를 생성하고 관리합니다</div>
+                </div>
+            </div>
+            
+            <form id="setup-form">
+                <div class="form-group">
+                    <label>관리자 이름</label>
+                    <input type="text" id="admin-name" required placeholder="홍길동">
+                </div>
+                
+                <div class="form-group">
+                    <label>이메일</label>
+                    <input type="email" id="admin-email" required placeholder="admin@fairschool.kr">
+                </div>
+                
+                <div class="form-group">
+                    <label>비밀번호</label>
+                    <input type="password" id="admin-password" required placeholder="최소 6자 이상">
+                    <small>안전한 비밀번호를 사용하세요</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>비밀번호 확인</label>
+                    <input type="password" id="admin-password-confirm" required placeholder="비밀번호 재입력">
+                </div>
+                
+                <button type="submit" class="btn" id="setup-btn">슈퍼어드민 계정 생성</button>
+            </form>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 10px; color: #666;">설정 중...</p>
+            </div>
+            
+            <div id="message" class="message"></div>
+        </div>
+        
+        <div id="already-setup" style="display: none; text-align: center;">
+            <h3 style="color: #28a745; margin-bottom: 15px;">✅ 이미 설정 완료</h3>
+            <p style="color: #666; margin-bottom: 20px;">시스템이 이미 설정되었습니다.</p>
+            <a href="http://admin.localhost:3001" class="btn" style="display: inline-block; text-decoration: none; width: auto; padding: 12px 30px;">
+                Admin Portal로 이동
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:3001/api/auth';
+        const USER_API = 'http://localhost:3002/api/user';
+        
+        // 페이지 로드 시 시스템 상태 확인
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkSystemStatus();
+        });
+        
+        // 시스템 상태 확인
+        async function checkSystemStatus() {
+            const statusEl = document.getElementById('status-check');
+            
+            try {
+                // MongoDB 연결 및 슈퍼어드민 존재 여부 확인
+                const response = await fetch(`${USER_API}/superadmin/check-setup`);
+                const data = await response.json();
+                
+                if (data.data && data.data.hasSuper) {
+                    // 이미 슈퍼어드민이 존재
+                    statusEl.style.display = 'none';
+                    document.getElementById('already-setup').style.display = 'block';
+                } else {
+                    // 초기 설정 필요
+                    statusEl.className = 'status-check ready';
+                    statusEl.innerHTML = '<p style="color: #28a745; font-weight: 600;">✓ 초기 설정을 시작할 수 있습니다</p>';
+                    document.getElementById('setup-content').style.display = 'block';
+                }
+            } catch (error) {
+                statusEl.className = 'status-check error';
+                statusEl.innerHTML = `
+                    <p style="color: #dc3545; font-weight: 600;">⚠ 서버 연결 실패</p>
+                    <p style="color: #666; font-size: 14px; margin-top: 10px;">서버가 실행 중인지 확인해주세요</p>
+                `;
+            }
+        }
+        
+        // 폼 제출
+        document.getElementById('setup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('admin-name').value;
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            const passwordConfirm = document.getElementById('admin-password-confirm').value;
+            
+            // 비밀번호 확인
+            if (password !== passwordConfirm) {
+                showMessage('비밀번호가 일치하지 않습니다', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showMessage('비밀번호는 최소 6자 이상이어야 합니다', 'error');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch(`${USER_API}/superadmin/setup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('슈퍼어드민 계정이 생성되었습니다! 3초 후 로그인 페이지로 이동합니다...', 'success');
+                    
+                    // 3초 후 admin 포털로 리다이렉트
+                    setTimeout(() => {
+                        window.location.href = 'http://admin.localhost:3001';
+                    }, 3000);
+                } else {
+                    showMessage(data.message || '계정 생성에 실패했습니다', 'error');
+                }
+            } catch (error) {
+                showMessage('서버 연결 오류: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        });
+        
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            const btn = document.getElementById('setup-btn');
+            
+            if (show) {
+                loading.classList.add('active');
+                btn.disabled = true;
+            } else {
+                loading.classList.remove('active');
+                btn.disabled = false;
+            }
+        }
+        
+        function showMessage(message, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = message;
+            messageEl.className = `message ${type}`;
+            
+            if (type === 'error') {
+                setTimeout(() => {
+                    messageEl.className = 'message';
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -2,10 +2,12 @@
 node_modules
 npm-debug.log
 yarn-error.log
+# package-lock.json은 빌드에 필요하므로 제외하지 않음
 
 # TypeScript
 *.tsbuildinfo
 dist
+*.map
 
 # Environment
 .env
@@ -25,11 +27,16 @@ Thumbs.db
 # Testing
 coverage
 .nyc_output
+test
+tests
+*.test.ts
+*.spec.ts
 
 # Temporary files
 *.log
 *.tmp
 .cache
+tmp
 
 # Git
 .git
@@ -38,9 +45,37 @@ coverage
 # Documentation (빌드에 불필요)
 *.md
 !README.md
+docs
+ARCHITECTURE.md
+API_TEST.md
+DEPLOYMENT.md
+DOCKER_GUIDE.md
+DOCKER_QUICKSTART.md
+GOOGLE_DRIVE_SETUP.md
+PROJECT_SUMMARY.md
+VERCEL_DEPLOYMENT.md
 
 # CI/CD
 .github
+.gitlab-ci.yml
+.travis.yml
+azure-pipelines.yml
 
 # Development files
 nodemon.json
+docker-cleanup.ps1
+docker-cleanup-all.ps1
+
+# Sample data
+sample_*.csv
+test.html
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+
+# Railway/Vercel
+railway.json
+vercel.json
+nixpacks.toml
+Procfile

@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FairSchool - 클래스룸</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- 로딩 화면 -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- 로그인 페이지 -->
+        <div id="login-page" class="page active">
+            <div class="login-container">
+                <div class="login-card">
+                    <h1>🎓 FairSchool</h1>
+                    <p class="subtitle">온라인 클래스룸</p>
+
+                    <!-- 로그인 폼 -->
+                    <form id="login-form" class="auth-form active">
+                        <div id="portal-info" style="text-align: center; margin-bottom: 20px; padding: 12px; background: #f0f4ff; border-radius: 8px; display: none;">
+                            <p style="margin: 0; color: #667eea; font-weight: 500; font-size: 14px;">
+                                🔐 시스템 관리자 포털
+                            </p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>이메일</label>
+                            <input type="email" id="login-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>비밀번호</label>
+                            <input type="password" id="login-password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">로그인</button>
+                    </form>
+
+                    <div id="auth-message" class="message"></div>
+                    
+                    <p id="footer-message" style="text-align: center; color: #999; margin-top: 20px; font-size: 14px;">
+                        학교 등록은 시스템 관리자에게 문의하세요.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 메인 대시보드 -->
+        <div id="dashboard-page" class="page">
+            <nav class="navbar">
+                <div class="navbar-brand">
+                    <h2>🎓 <span id="school-name">FairSchool</span></h2>
+                </div>
+                <div class="navbar-menu">
+                    <span id="user-name" class="user-info"></span>
+                    <button onclick="logout()" class="btn btn-secondary">로그아웃</button>
+                </div>
+            </nav>
+
+            <div class="container">
+                <!-- 탭 네비게이션 -->
+                <div class="tab-navigation">
+                    <button class="tab-item active" onclick="showSection('classes')">
+                        📚 클래스
+                    </button>
+                    <button class="tab-item" onclick="showSection('students')">
+                        👥 학생
+                    </button>
+                    <button class="tab-item" onclick="showSection('teachers')">
+                        👨‍🏫 교사
+                    </button>
+                    <button class="tab-item" onclick="showSection('assignments')">
+                        📝 과제
+                    </button>
+                </div>
+
+                <div class="main-content">
+                    <!-- 클래스 관리 섹션 -->
+                    <div id="classes-section" class="section active">
+                        <div class="section-header">
+                            <h2>클래스 관리</h2>
+                            <button onclick="openCreateClassModal()" class="btn btn-primary">+ 클래스 생성</button>
+                        </div>
+                        <div id="classes-list" class="card-grid">
+                            <!-- 클래스 카드가 여기에 동적으로 추가됩니다 -->
+                        </div>
+                    </div>
+
+                    <!-- 학생 관리 섹션 -->
+                    <div id="students-section" class="section">
+                        <div class="section-header">
+                            <h2>학생 관리</h2>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="downloadCSV()" class="btn btn-secondary btn-sm">📥 다운로드</button>
+                                <button onclick="openUploadCSVModal()" class="btn btn-secondary btn-sm">📤 업로드</button>
+                                <button onclick="openAddStudentModal()" class="btn btn-primary btn-sm">+ 추가</button>
+                            </div>
+                        </div>
+                        
+                        <!-- 검색 및 필터 -->
+                        <div style="display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; flex-wrap: wrap;">
+                            <input type="text" id="student-search" placeholder="이름 또는 학번으로 검색..." style="flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                            
+                            <select id="student-grade-filter" onchange="filterStudents()" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                                <option value="">전체 학년</option>
+                                <option value="1">1학년</option>
+                                <option value="2">2학년</option>
+                                <option value="3">3학년</option>
+                            </select>
+                            
+                            <select id="student-class-filter" onchange="filterStudents()" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                                <option value="">전체 반</option>
+                                <option value="1">1반</option>
+                                <option value="2">2반</option>
+                                <option value="3">3반</option>
+                                <option value="4">4반</option>
+                                <option value="5">5반</option>
+                                <option value="6">6반</option>
+                                <option value="7">7반</option>
+                                <option value="8">8반</option>
+                                <option value="9">9반</option>
+                                <option value="10">10반</option>
+                            </select>
+                            
+                            <button onclick="searchStudents()" class="btn btn-primary btn-sm">검색</button>
+                            <button onclick="deleteSelectedStudents()" class="btn btn-danger btn-sm">선택 삭제</button>
+                        </div>
+                        
+                        <div id="students-list" class="table-container">
+                            <!-- 학생 목록이 여기에 표시됩니다 -->
+                        </div>
+                        
+                        <!-- 페이지네이션 -->
+                        <div id="student-pagination" style="display: flex; justify-content: center; gap: 5px; margin-top: 20px;">
+                            <!-- 페이지 버튼이 동적으로 추가됩니다 -->
+                        </div>
+                    </div>
+
+                    <!-- 교사 관리 섹션 -->
+                    <div id="teachers-section" class="section">
+                        <div class="section-header">
+                            <h2>교사 관리</h2>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="downloadTeacherCSV()" class="btn btn-secondary btn-sm">📥 다운로드</button>
+                                <button onclick="openUploadTeacherCSVModal()" class="btn btn-secondary btn-sm">📤 업로드</button>
+                                <button onclick="openAddTeacherModal()" class="btn btn-primary btn-sm">+ 추가</button>
+                            </div>
+                        </div>
+                        
+                        <!-- 검색 및 필터 -->
+                        <div style="display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px;">
+                            <input type="text" id="teacher-search" placeholder="이름으로 검색..." style="flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                            <button onclick="searchTeachers()" class="btn btn-primary btn-sm">검색</button>
+                            <button onclick="deleteSelectedTeachers()" class="btn btn-danger btn-sm">선택 삭제</button>
+                        </div>
+                        
+                        <div id="teachers-list" class="table-container">
+                            <!-- 교사 목록이 여기에 표시됩니다 -->
+                        </div>
+                        
+                        <!-- 페이지네이션 -->
+                        <div id="teacher-pagination" style="display: flex; justify-content: center; gap: 5px; margin-top: 20px;">
+                            <!-- 페이지 버튼이 동적으로 추가됩니다 -->
+                        </div>
+                    </div>
+
+                    <!-- 과제 관리 섹션 -->
+                    <div id="assignments-section" class="section">
+                        <div class="section-header">
+                            <h2>과제 관리</h2>
+                            <button onclick="openCreateAssignmentModal()" class="btn btn-primary">+ 과제 생성</button>
+                        </div>
+                        <div id="assignments-list" class="card-grid">
+                            <!-- 과제 목록이 여기에 표시됩니다 -->
+                        </div>
+                    </div>
+
+                    <!-- 슈퍼어드민은 admin.html로 리디렉션됨 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 클래스룸 상세 페이지 -->
+        <div id="classroom-page" class="classroom-page">
+            <div class="classroom-header">
+                <div class="classroom-header-content">
+                    <button class="back-button" onclick="backToDashboard()">← 돌아가기</button>
+                    <h1 class="classroom-title" id="classroom-name">1학년 1반</h1>
+                    <p class="classroom-subtitle" id="classroom-desc">학년: 1학년 | 반: 1반</p>
+                    <span class="classroom-code" id="classroom-code-display">클래스 코드: ABC123</span>
+                </div>
+            </div>
+
+            <div class="classroom-tabs">
+                <div class="tabs-container">
+                    <button class="tab-button active" onclick="switchClassroomTab('stream')">스트림</button>
+                    <button class="tab-button" onclick="switchClassroomTab('classwork')">과제</button>
+                    <button class="tab-button" onclick="switchClassroomTab('people')">학생</button>
+                </div>
+            </div>
+
+            <div class="classroom-content">
+                <!-- 스트림 탭 -->
+                <div id="stream-tab" class="tab-content active">
+                    <button class="post-announcement-btn" onclick="openAnnouncementModal()">
+                        📢 학생들에게 공지사항 게시...
+                    </button>
+                    <div id="stream-list">
+                        <!-- 공지사항이 여기에 표시됩니다 -->
+                    </div>
+                </div>
+
+                <!-- 과제 탭 -->
+                <div id="classwork-tab" class="tab-content">
+                    <button class="btn btn-primary" onclick="openCreateAssignmentModal()" style="margin-bottom: 20px;">
+                        + 과제 만들기
+                    </button>
+                    <div id="classroom-assignments-list">
+                        <!-- 과제 목록이 여기에 표시됩니다 -->
+                    </div>
+                </div>
+
+                <!-- 학생 탭 -->
+                <div id="people-tab" class="tab-content">
+                    <div class="students-count" id="students-count">학생 0명</div>
+                    <div id="classroom-students-list">
+                        <!-- 학생 목록이 여기에 표시됩니다 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모달들 -->
+    <div id="modal-overlay" class="modal-overlay" onclick="closeModal()"></div>
+    
+    <!-- 클래스 생성 모달 -->
+    <div id="create-class-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>과목 생성</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="create-class-form">
+                <div class="form-group">
+                    <label>과목명</label>
+                    <input type="text" id="class-name" placeholder="예: 수학, 영어, 과학" required>
+                </div>
+                <div class="form-group">
+                    <label>과목 설명</label>
+                    <textarea id="class-description" rows="3" placeholder="과목에 대한 간단한 설명" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; resize: vertical;"></textarea>
+                </div>
+                
+                <!-- 학생 선택 섹션 -->
+                <div class="form-group">
+                    <label>수강 학생 선택 (선택사항)</label>
+                    
+                    <!-- 학생 검색 필터 -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <select id="class-student-grade-filter" onchange="filterClassStudents()" style="flex: 1;">
+                            <option value="">전체 학년</option>
+                            <option value="1">1학년</option>
+                            <option value="2">2학년</option>
+                            <option value="3">3학년</option>
+                            <option value="4">4학년</option>
+                            <option value="5">5학년</option>
+                            <option value="6">6학년</option>
+                        </select>
+                        <select id="class-student-classnum-filter" onchange="filterClassStudents()" style="flex: 1;">
+                            <option value="">전체 반</option>
+                            <option value="1">1반</option>
+                            <option value="2">2반</option>
+                            <option value="3">3반</option>
+                            <option value="4">4반</option>
+                            <option value="5">5반</option>
+                        </select>
+                        <input type="text" id="class-student-search" placeholder="이름 또는 학번 검색" oninput="filterClassStudents()" style="flex: 2; padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                    
+                    <!-- 전체 선택/해제 -->
+                    <div style="margin-bottom: 10px;">
+                        <label style="cursor: pointer;">
+                            <input type="checkbox" id="select-all-students" onchange="toggleAllStudents(this.checked)">
+                            <span style="margin-left: 5px;">전체 선택/해제</span>
+                        </label>
+                    </div>
+                    
+                    <!-- 학생 목록 -->
+                    <div id="class-student-list" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background-color: #f9f9f9;">
+                        <p style="text-align: center; color: #999;">학생 목록을 불러오는 중...</p>
+                    </div>
+                    
+                    <small style="color: #666; margin-top: 5px; display: block;">
+                        또는 클래스 생성 후 클래스 코드로 학생들이 자가 등록할 수 있습니다.
+                    </small>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal()" class="btn btn-secondary">취소</button>
+                    <button type="submit" class="btn btn-primary">생성</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 과제 생성 모달 -->
+    <div id="create-assignment-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>과제 생성</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="create-assignment-form" onsubmit="handleCreateAssignment(event)">
+                <div class="form-group">
+                    <label>과제 제목</label>
+                    <input type="text" id="assignment-title" placeholder="예: 수학 1단원 문제" required>
+                </div>
+                <div class="form-group">
+                    <label>과제 설명</label>
+                    <textarea id="assignment-description" rows="4" placeholder="과제 내용을 입력하세요" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>클래스 선택</label>
+                    <select id="assignment-class" required>
+                        <option value="">클래스를 선택하세요</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>마감일</label>
+                    <input type="datetime-local" id="assignment-due-date" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal()" class="btn btn-secondary">취소</button>
+                    <button type="submit" class="btn btn-primary">생성</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 과제 제출 모달 -->
+    <div id="submit-assignment-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>과제 제출</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="submit-assignment-form" onsubmit="handleSubmitAssignment(event)">
+                <input type="hidden" id="submit-assignment-id">
+                <input type="hidden" id="submit-class-id">
+                
+                <div class="form-group">
+                    <label>과제명</label>
+                    <input type="text" id="submit-assignment-title" readonly style="background-color: #f5f5f5;">
+                </div>
+                
+                <div class="form-group">
+                    <label>제출 내용 (선택)</label>
+                    <textarea id="submit-content" rows="4" placeholder="제출 내용을 입력하세요 (선택사항)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>파일 첨부</label>
+                    <input type="file" id="submit-files" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif">
+                    <small style="color: #666;">최대 5개 파일, 각 10MB 이하</small>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal()" class="btn btn-secondary">취소</button>
+                    <button type="submit" class="btn btn-primary">제출</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 학생 추가 모달 -->
+    <div id="add-student-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>학생 추가</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="add-student-form">
+                <div class="form-group">
+                    <label>학생 이름</label>
+                    <input type="text" id="student-name" required>
+                    <div class="error-message" id="student-name-error"></div>
+                </div>
+                <div class="form-group">
+                    <label>이메일</label>
+                    <input type="email" id="student-email" required>
+                    <div class="error-message" id="student-email-error"></div>
+                </div>
+                <div class="form-group">
+                    <label>비밀번호</label>
+                    <input type="password" id="student-password" value="1234" required>
+                    <div class="error-message" id="student-password-error"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>학년</label>
+                        <select id="student-grade" required onchange="generateStudentNumber()">
+                            <option value="">선택</option>
+                            <option value="1">1학년</option>
+                            <option value="2">2학년</option>
+                            <option value="3">3학년</option>
+                        </select>
+                        <div class="error-message" id="student-grade-error"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>반</label>
+                        <select id="student-class-num" required onchange="generateStudentNumber()">
+                            <option value="">선택</option>
+                            <option value="1">1반</option>
+                            <option value="2">2반</option>
+                            <option value="3">3반</option>
+                            <option value="4">4반</option>
+                            <option value="5">5반</option>
+                            <option value="6">6반</option>
+                            <option value="7">7반</option>
+                            <option value="8">8반</option>
+                            <option value="9">9반</option>
+                            <option value="10">10반</option>
+                        </select>
+                        <div class="error-message" id="student-class-num-error"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>번호</label>
+                        <input type="number" id="student-number-input" min="1" max="50" required onchange="generateStudentNumber()">
+                        <div class="error-message" id="student-number-input-error"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>학번 (자동생성)</label>
+                    <input type="text" id="student-number" readonly style="background: #f5f5f5;">
+                    <div class="error-message" id="student-number-error"></div>
+                </div>
+                <div class="form-group">
+                    <label>클래스 배정 (선택)</label>
+                    <select id="student-class">
+                        <option value="">클래스를 선택하세요</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal()" class="btn btn-secondary">취소</button>
+                    <button type="submit" class="btn btn-primary">추가</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 학생 수정 모달 -->
+    <div id="edit-student-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>학생 정보 수정</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="edit-student-form" onsubmit="handleEditStudent(event)">
+                <input type="hidden" id="edit-student-id">
+                <div class="form-group">
+                    <label>학생 이름</label>
+                    <input type="text" id="edit-student-name" required>
+                </div>
+                <div class="form-group">
+                    <label>이메일</label>
+                    <input type="email" id="edit-student-email" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>학년</label>
+                        <select id="edit-student-grade" required onchange="generateEditStudentNumber()">
+                            <option value="">선택</option>
+                            <option value="1">1학년</option>
+                            <option value="2">2학년</option>
+                            <option value="3">3학년</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>반</label>
+                        <select id="edit-student-class-num" required onchange="generateEditStudentNumber()">
+                            <option value="">선택</option>
+                            <option value="1">1반</option>
+                            <option value="2">2반</option>
+                            <option value="3">3반</option>
+                            <option value="4">4반</option>
+                            <option value="5">5반</option>
+                            <option value="6">6반</option>
+                            <option value="7">7반</option>
+                            <option value="8">8반</option>
+                            <option value="9">9반</option>
+                            <option value="10">10반</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>번호</label>
+                        <input type="number" id="edit-student-number-input" min="1" max="50" required onchange="generateEditStudentNumber()">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>학번 (자동생성)</label>
+                    <input type="text" id="edit-student-number" readonly style="background: #f5f5f5;">
+                </div>
+                <div class="form-group">
+                    <label>클래스 배정</label>
+                    <select id="edit-student-class">
+                        <option value="">클래스를 선택하세요</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal()" class="btn btn-secondary">취소</button>
+                    <button type="submit" class="btn btn-primary">수정</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 학생 상세 정보 모달 -->
+    <div id="student-detail-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>학생 상세 정보</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="detail-info">
+                <div class="detail-row">
+                    <label>이름:</label>
+                    <span id="detail-student-name"></span>
+                </div>
+                <div class="detail-row">
+                    <label>학번:</label>
+                    <span id="detail-student-number"></span>
+                </div>
+                <div class="detail-row">
+                    <label>이메일:</label>
+                    <span id="detail-student-email"></span>
+                </div>
+                <div class="detail-row">
+                    <label>입학년도:</label>
+                    <span id="detail-student-admission"></span>
+                </div>
+                <div class="detail-row">
+                    <label>학년:</label>
+                    <span id="detail-student-grade"></span>
+                </div>
+                <div class="detail-row">
+                    <label>반:</label>
+                    <span id="detail-student-class"></span>
+                </div>
+                <div class="detail-row">
+                    <label>번호:</label>
+                    <span id="detail-student-num"></span>
+                </div>
+                <div class="detail-row">
+                    <label>클래스:</label>
+                    <span id="detail-student-class-name"></span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-primary" onclick="openEditStudentFromDetail()">수정</button>
+                <button type="button" class="btn-danger" onclick="deleteStudentFromDetail()">삭제</button>
+                <button type="button" class="btn-secondary" onclick="closeModal()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 교사 상세 정보 모달 -->
+    <div id="teacher-detail-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>교사 상세 정보</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="detail-info">
+                <div class="detail-row">
+                    <label>이름:</label>
+                    <span id="detail-teacher-name"></span>
+                </div>
+                <div class="detail-row">
+                    <label>이메일:</label>
+                    <span id="detail-teacher-email"></span>
+                </div>
+                <div class="detail-row">
+                    <label>과목:</label>
+                    <span id="detail-teacher-subject"></span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-primary" onclick="openEditTeacherFromDetail()">수정</button>
+                <button type="button" class="btn-danger" onclick="deleteTeacherFromDetail()">삭제</button>
+                <button type="button" class="btn-secondary" onclick="closeModal()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSV 업로드 모달 -->
+    <div id="upload-csv-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>학생 CSV 파일 업로드</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="upload-csv-form">
+                <div class="form-group">
+                    <label>CSV 파일 선택</label>
+                    <input type="file" id="csv-file" accept=".csv" required>
+                    <small style="color: #666; display: block; margin-top: 8px;">
+                        <strong>CSV 형식:</strong> 이름, 이메일, 입학년도, 학년, 반, 번호, 클래스ID(선택), 비밀번호(선택)<br>
+                        <strong>학번 자동생성:</strong> 학년 + 반(2자리) + 번호(2자리) 예: 1학년 1반 1번 → 10101<br>
+                        <a href="/sample_students.csv" download style="color: #667eea; text-decoration: underline;">📥 샘플 파일 다운로드</a>
+                    </small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal()" class="btn btn-secondary">취소</button>
+                    <button type="submit" class="btn btn-primary">업로드</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 공지사항 작성 모달 -->
+    <div id="announcement-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>공지사항 작성</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="announcement-form">
+                <div class="form-group">
+                    <label>제목</label>
+                    <input type="text" id="announcement-title" required>
+                </div>
+                <div class="form-group">
+                    <label>내용</label>
+                    <textarea id="announcement-content" rows="5" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit;"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal()" class="btn btn-secondary">취소</button>
+                    <button type="submit" class="btn btn-primary">게시</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 교사 추가 모달 -->
+    <div id="add-teacher-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>교사 추가</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="add-teacher-form" onsubmit="handleAddTeacher(event)">
+                <div class="form-group">
+                    <label>이름</label>
+                    <input type="text" id="teacher-name" required>
+                </div>
+                <div class="form-group">
+                    <label>이메일</label>
+                    <input type="email" id="teacher-email" required>
+                </div>
+                <div class="form-group">
+                    <label>비밀번호</label>
+                    <input type="password" id="teacher-password" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal()" class="btn btn-secondary">취소</button>
+                    <button type="submit" class="btn btn-primary">추가</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 교사 수정 모달 -->
+    <div id="edit-teacher-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>교사 정보 수정</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="edit-teacher-form" onsubmit="handleEditTeacher(event)">
+                <input type="hidden" id="edit-teacher-id">
+                <div class="form-group">
+                    <label>이름</label>
+                    <input type="text" id="edit-teacher-name" required>
+                </div>
+                <div class="form-group">
+                    <label>이메일</label>
+                    <input type="email" id="edit-teacher-email" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal()" class="btn btn-secondary">취소</button>
+                    <button type="submit" class="btn btn-primary">수정</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 교사 CSV 업로드 모달 -->
+    <div id="upload-teacher-csv-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>교사 CSV 파일 업로드</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="upload-teacher-csv-form" onsubmit="handleUploadTeacherCSV(event)">
+                <div class="form-group">
+                    <label>CSV 파일 선택</label>
+                    <input type="file" id="teacher-csv-file" accept=".csv" required>
+                    <small style="color: #666; display: block; margin-top: 8px;">
+                        CSV 형식: name, email, password<br>
+                        <a href="${USER_API}/teachers/download-template" style="color: #667eea;">템플릿 다운로드</a>
+                    </small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal()" class="btn btn-secondary">취소</button>
+                    <button type="submit" class="btn btn-primary">업로드</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>슈퍼관리자 - FairSchool</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .school-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        .school-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .school-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 로그인 페이지 -->
+        <div id="login-page" class="page active">
+            <div class="auth-container">
+                <div class="auth-card">
+                    <h1 style="text-align: center; margin-bottom: 30px;">🔐 슈퍼관리자 로그인</h1>
+                    
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label>이메일</label>
+                            <input type="email" id="login-email" value="superadmin@fairschool.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>비밀번호</label>
+                            <input type="password" id="login-password" value="SuperAdmin123!" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">로그인</button>
+                    </form>
+
+                    <div id="auth-message" class="message"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 슈퍼관리자 대시보드 -->
+        <div id="dashboard-page" class="page">
+            <nav class="navbar">
+                <div class="navbar-brand">
+                    <h2>🔐 슈퍼관리자</h2>
+                </div>
+                <div class="navbar-menu">
+                    <span id="user-name" class="user-info"></span>
+                    <button onclick="logout()" class="btn btn-secondary">로그아웃</button>
+                </div>
+            </nav>
+
+            <div class="container">
+                <h2>전체 통계</h2>
+                <div id="stats-container" class="stats-grid">
+                    <!-- 통계 카드가 여기에 표시됩니다 -->
+                </div>
+
+                <div class="section-header">
+                    <h2>학교 관리</h2>
+                    <button onclick="openCreateSchoolModal()" class="btn btn-primary">+ 학교 추가</button>
+                </div>
+
+                <div id="schools-container">
+                    <!-- 학교 목록이 여기에 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모달 -->
+    <div id="modal-overlay" class="modal-overlay" onclick="closeModal()"></div>
+    
+    <!-- 학교 생성 모달 -->
+    <div id="create-school-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>학교 추가</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="create-school-form">
+                <div class="form-group">
+                    <label>학교 이름</label>
+                    <input type="text" id="school-name" required>
+                </div>
+                <div class="form-group">
+                    <label>관리자 이름</label>
+                    <input type="text" id="admin-name" required>
+                </div>
+                <div class="form-group">
+                    <label>관리자 이메일</label>
+                    <input type="email" id="admin-email" required>
+                </div>
+                <div class="form-group">
+                    <label>관리자 비밀번호</label>
+                    <input type="password" id="admin-password" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal()" class="btn btn-secondary">취소</button>
+                    <button type="submit" class="btn btn-primary">추가</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api/auth';
+        const USER_API = 'http://localhost:3002/api/user';
+
+        let currentUser = null;
+        let currentToken = null;
+        let schools = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+            document.getElementById('create-school-form').addEventListener('submit', handleCreateSchool);
+        }
+
+        function checkAuth() {
+            const token = localStorage.getItem('superadmin_token');
+            const user = localStorage.getItem('superadmin_user');
+            
+            if (token && user) {
+                currentToken = token;
+                currentUser = JSON.parse(user);
+                if (currentUser.role === 'superadmin' || currentUser.isSuperAdmin) {
+                    showDashboard();
+                } else {
+                    showLoginPage();
+                }
+            } else {
+                showLoginPage();
+            }
+        }
+
+        function showLoginPage() {
+            document.getElementById('login-page').classList.add('active');
+            document.getElementById('dashboard-page').classList.remove('active');
+        }
+
+        function showDashboard() {
+            document.getElementById('login-page').classList.remove('active');
+            document.getElementById('dashboard-page').classList.add('active');
+            
+            document.getElementById('user-name').textContent = currentUser.name;
+            
+            loadStats();
+            loadSchools();
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            showLoading(true);
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.data?.accessToken) {
+                    const user = data.data.user;
+                    if (user.role === 'superadmin' || user.isSuperAdmin) {
+                        currentToken = data.data.accessToken;
+                        currentUser = user;
+                        
+                        localStorage.setItem('superadmin_token', currentToken);
+                        localStorage.setItem('superadmin_user', JSON.stringify(user));
+                        
+                        showDashboard();
+                    } else {
+                        showMessage('슈퍼관리자 권한이 없습니다', 'error');
+                    }
+                } else {
+                    showMessage(data.message || '로그인 실패', 'error');
+                }
+            } catch (error) {
+                showMessage('서버 연결 오류: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${USER_API}/superadmin/stats`, {
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.data) {
+                    renderStats(data.data);
+                }
+            } catch (error) {
+                console.error('통계 로드 실패:', error);
+            }
+        }
+
+        function renderStats(stats) {
+            const container = document.getElementById('stats-container');
+            container.innerHTML = `
+                <div class="stat-card">
+                    <h3>전체 학교</h3>
+                    <p class="number">${stats.schools || 0}</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <h3>전체 사용자</h3>
+                    <p class="number">${stats.users || 0}</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <h3>전체 클래스</h3>
+                    <p class="number">${stats.classes || 0}</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <h3>전체 과제</h3>
+                    <p class="number">${stats.assignments || 0}</p>
+                </div>
+            `;
+        }
+
+        async function loadSchools() {
+            showLoading(true);
+            
+            try {
+                const response = await fetch(`${USER_API}/superadmin/schools`, {
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.data) {
+                    schools = data.data;
+                    renderSchools();
+                }
+            } catch (error) {
+                console.error('학교 로드 실패:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function renderSchools() {
+            const container = document.getElementById('schools-container');
+            
+            if (schools.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">등록된 학교가 없습니다.</p>';
+                return;
+            }
+            
+            container.innerHTML = schools.map(school => `
+                <div class="school-card">
+                    <div class="school-header">
+                        <h3>${school.name}</h3>
+                        <button onclick="deleteSchool('${school._id}')" class="btn btn-danger btn-sm">삭제</button>
+                    </div>
+                    <div class="school-stats">
+                        <span>👥 전체: ${school.stats?.totalUsers || 0}명</span>
+                        <span>👨‍💼 관리자: ${school.stats?.admins || 0}명</span>
+                        <span>👨‍🏫 교사: ${school.stats?.teachers || 0}명</span>
+                        <span>👨‍🎓 학생: ${school.stats?.students || 0}명</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openCreateSchoolModal() {
+            document.getElementById('modal-overlay').classList.add('active');
+            document.getElementById('create-school-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('active');
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('active');
+            });
+        }
+
+        async function handleCreateSchool(e) {
+            e.preventDefault();
+            showLoading(true);
+            
+            const schoolName = document.getElementById('school-name').value;
+            const adminName = document.getElementById('admin-name').value;
+            const adminEmail = document.getElementById('admin-email').value;
+            const adminPassword = document.getElementById('admin-password').value;
+            
+            try {
+                const response = await fetch(`${USER_API}/superadmin/schools`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({
+                        schoolName,
+                        adminName,
+                        adminEmail,
+                        adminPassword
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    closeModal();
+                    loadSchools();
+                    loadStats();
+                    e.target.reset();
+                    alert('학교가 추가되었습니다!');
+                } else {
+                    alert(data.message || '학교 추가에 실패했습니다');
+                }
+            } catch (error) {
+                alert('서버 연결 오류: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function deleteSchool(schoolId) {
+            if (!confirm('정말 이 학교를 삭제하시겠습니까? 모든 관련 데이터가 삭제됩니다.')) {
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch(`${USER_API}/superadmin/schools/${schoolId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    loadSchools();
+                    loadStats();
+                    alert('학교가 삭제되었습니다');
+                } else {
+                    alert(data.message || '학교 삭제에 실패했습니다');
+                }
+            } catch (error) {
+                alert('서버 연결 오류: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('superadmin_token');
+            localStorage.removeItem('superadmin_user');
+            currentUser = null;
+            currentToken = null;
+            showLoginPage();
+        }
+
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            if (show) {
+                loading.classList.add('active');
+            } else {
+                loading.classList.remove('active');
+            }
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('auth-message');
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+            
+            setTimeout(() => {
+                messageDiv.className = 'message';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

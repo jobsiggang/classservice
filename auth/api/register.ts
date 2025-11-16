@@ -9,7 +9,7 @@ import { asyncHandler } from '../../shared/middleware/errorHandler';
 const router = express.Router();
 
 router.post('/', asyncHandler(async (req: Request, res: Response) => {
-  const { name, email, password, role, schoolId } = req.body;
+  const { name, email, password, role, schoolId, classCode } = req.body;
 
   // Validation
   const validation = validateRequired({ name, email, password, role });
@@ -35,8 +35,30 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     return sendError(res, '유효하지 않은 역할입니다', 400);
   }
 
-  // Check if user exists
   const db = await getDB();
+  
+  // 학생이 클래스 코드로 가입하는 경우
+  let finalSchoolId = schoolId;
+  let finalClassIds: string[] = [];
+  
+  if (role === 'student' && classCode) {
+    // 클래스 코드로 클래스 찾기
+    const classData = await db.collection('classes').findOne({ classCode: classCode });
+    
+    if (!classData) {
+      return sendError(res, '유효하지 않은 클래스 코드입니다', 400);
+    }
+    
+    finalSchoolId = classData.schoolId;
+    finalClassIds = [classData._id.toString()];
+  }
+  
+  // schoolId 검증 (학생이 아닌 경우 필수)
+  if (!finalSchoolId && role !== 'student') {
+    return sendError(res, 'schoolId가 필요합니다', 400);
+  }
+
+  // Check if user exists
   const existingUser = await db.collection('users').findOne({ email });
 
   if (existingUser) {
@@ -47,12 +69,13 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   // Create user
-  const newUser = {
+  const newUser: any = {
     name,
     email,
     password: hashedPassword,
     role,
-    schoolId: schoolId || null,
+    schoolId: finalSchoolId,
+    classIds: finalClassIds, // 여러 클래스 가능
     createdAt: new Date(),
     updatedAt: new Date(),
     lastLogin: null
@@ -65,7 +88,8 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     name,
     email,
     role,
-    schoolId
+    schoolId: finalSchoolId,
+    classIds: finalClassIds
   }, '회원가입이 완료되었습니다');
 }));
 

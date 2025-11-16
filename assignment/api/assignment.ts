@@ -155,4 +155,65 @@ router.delete('/:assignmentId', verifyToken, requireRole('teacher', 'admin'), as
   return sendSuccess(res, { assignmentId }, '과제가 삭제되었습니다');
 }));
 
+// 과제 제출 목록 조회 (Teacher/Admin만)
+router.get('/:assignmentId/submissions', verifyToken, requireRole('teacher', 'admin'), asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { assignmentId } = req.params;
+
+  const db = await getDB();
+  
+  // 과제 조회
+  const assignment = await db.collection('assignments').findOne({ _id: new ObjectId(assignmentId) });
+  if (!assignment) {
+    return sendError(res, '과제를 찾을 수 없습니다', 404);
+  }
+
+  if (assignment.schoolId !== req.user!.schoolId) {
+    return sendError(res, '권한이 없습니다', 403);
+  }
+
+  // 클래스의 모든 학생 조회
+  const students = await db.collection('users')
+    .find({ 
+      classId: assignment.classId,
+      role: 'student'
+    })
+    .project({ password: 0 })
+    .toArray();
+
+  // 제출 목록 조회
+  const submissions = await db.collection('submissions')
+    .find({ assignmentId })
+    .toArray();
+
+  // 학생별 제출 상태 매핑
+  const studentsWithSubmissions = students.map(student => {
+    const submission = submissions.find(sub => 
+      sub.studentId.toString() === student._id.toString()
+    );
+    
+    return {
+      _id: student._id,
+      name: student.name,
+      email: student.email,
+      studentNumber: student.studentNumber,
+      submitted: !!submission,
+      submittedAt: submission?.submittedAt || null,
+      grade: submission?.grade || null,
+      feedback: submission?.feedback || null,
+      submissionId: submission?._id || null
+    };
+  });
+
+  return sendSuccess(res, {
+    assignment: {
+      _id: assignment._id,
+      title: assignment.title,
+      dueDate: assignment.dueDate
+    },
+    students: studentsWithSubmissions,
+    totalStudents: students.length,
+    submittedCount: submissions.length
+  });
+}));
+
 export default router;

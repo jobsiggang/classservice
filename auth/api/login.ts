@@ -36,6 +36,9 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     return sendError(res, '비밀번호가 일치하지 않습니다', 401);
   }
 
+  // 비밀번호 변경 필요 여부 확인
+  const requirePasswordChange = user.requirePasswordChange === true;
+
   // Generate tokens
   const accessToken = jwt.sign(
     { 
@@ -62,6 +65,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   return sendSuccess(res, {
     accessToken,
     refreshToken,
+    requirePasswordChange, // 첫 로그인 시 비밀번호 변경 필요
     user: {
       id: user._id,
       name: user.name,
