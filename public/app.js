@@ -14,6 +14,10 @@ const ASSIGNMENT_API = isProduction
     ? (window.RAILWAY_ASSIGNMENT_URL || 'https://fairschool-assignment.up.railway.app/api/assignment')
     : 'http://localhost:3003/api/assignment';
 
+const FILE_API = isProduction 
+    ? (window.RAILWAY_FILE_URL || 'https://file-fairschool.up.railway.app/api/file')
+    : 'http://localhost:3004/api/file';
+
 // 상태 관리
 let currentUser = null;
 let currentToken = null;
@@ -398,7 +402,7 @@ function renderClasses() {
     const isTeacher = currentUser.role === 'teacher' || currentUser.role === 'admin';
     
     container.innerHTML = classes.map(cls => `
-        <div class="class-card">
+        <div class="class-card" onclick="viewClass('${cls._id}')" style="cursor: pointer;">
             <div style="display: flex; justify-content: space-between; align-items: start;">
                 <h3 style="margin: 0; flex: 1;">${cls.name}</h3>
                 ${isTeacher ? `
@@ -1455,7 +1459,7 @@ async function viewClass(classId) {
     // 헤더 정보 업데이트
     document.getElementById('classroom-name').textContent = currentClassroom.name;
     document.getElementById('classroom-desc').textContent = 
-        `학년: ${currentClassroom.grade}학년 | 반: ${currentClassroom.section}반`;
+        currentClassroom.description || '클래스 설명이 없습니다';
     document.getElementById('classroom-code-display').textContent = 
         `클래스 코드: ${currentClassroom.classCode}`;
 
@@ -1774,10 +1778,20 @@ function closeAssignmentDetail() {
 
 // 과제 생성 모달 열기
 function openCreateAssignmentModal() {
-    // 클래스 목록 로드
-    const selectEl = document.getElementById('assignment-class');
-    selectEl.innerHTML = '<option value="">클래스를 선택하세요</option>' + 
-        classes.map(cls => `<option value="${cls._id}">${cls.name}</option>`).join('');
+    // 클래스 목록을 체크박스로 표시
+    const listEl = document.getElementById('assignment-classes-list');
+    if (classes.length === 0) {
+        listEl.innerHTML = '<p style="color: #999; text-align: center;">등록된 클래스가 없습니다</p>';
+    } else {
+        listEl.innerHTML = classes.map(cls => `
+            <label style="display: block; padding: 8px; cursor: pointer; border-radius: 4px; transition: background 0.2s;" 
+                   onmouseover="this.style.background='#f5f5f5'" 
+                   onmouseout="this.style.background='transparent'">
+                <input type="checkbox" name="classIds" value="${cls._id}" style="margin-right: 8px;">
+                ${cls.name} (${cls.studentIds?.length || 0}명)
+            </label>
+        `).join('');
+    }
     
     // 기본 마감일 설정 (내일)
     const tomorrow = new Date();
@@ -1797,33 +1811,46 @@ async function handleCreateAssignment(e) {
     
     const title = document.getElementById('assignment-title').value;
     const description = document.getElementById('assignment-description').value;
-    const classId = document.getElementById('assignment-class').value;
     const dueDate = document.getElementById('assignment-due-date').value;
     
+    // 선택된 클래스들 가져오기
+    const checkboxes = document.querySelectorAll('input[name="classIds"]:checked');
+    const classIds = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (classIds.length === 0) {
+        alert('최소 하나의 클래스를 선택해주세요');
+        showLoading(false);
+        return;
+    }
+    
     try {
-        const response = await fetch(`${ASSIGNMENT_API}/assignments`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${currentToken}`
-            },
-            body: JSON.stringify({ 
-                title, 
-                description,
-                classId,
-                dueDate: new Date(dueDate).toISOString()
+        // 각 클래스에 대해 과제 생성
+        const promises = classIds.map(classId => 
+            fetch(`${ASSIGNMENT_API}/assignments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${currentToken}`
+                },
+                body: JSON.stringify({ 
+                    title, 
+                    description,
+                    classId,
+                    dueDate: new Date(dueDate).toISOString()
+                })
             })
-        });
+        );
         
-        const data = await response.json();
+        const responses = await Promise.all(promises);
+        const successCount = responses.filter(r => r.ok).length;
         
-        if (response.ok) {
+        if (successCount > 0) {
             closeModal();
             loadAssignments();
             e.target.reset();
-            alert('과제가 생성되었습니다!');
+            alert(`${successCount}개 클래스에 과제가 생성되었습니다!`);
         } else {
-            alert(data.message || '과제 생성에 실패했습니다');
+            alert('과제 생성에 실패했습니다');
         }
     } catch (error) {
         alert('서버 연결 오류: ' + error.message);
